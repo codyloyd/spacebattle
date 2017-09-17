@@ -170,7 +170,7 @@ end
 
 function move_enemies()
 	foreach(enemies,function(e)
-		e.m_y += .3
+		e.m_y += .7
 		e.x = e.r*sin(t/60) + e.m_x
 		e.y = e.r*cos(t/60) + e.m_y
 		if e.y > 150 then
