@@ -1,10 +1,13 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+cartdata("_space_battle_")
+highscore = dget(0)
 t=0
 m_x = 0
 m_y = 0
 whiteframe = false
+redstar = false
 music(0)
 
 function _init()
@@ -12,7 +15,7 @@ function _init()
 		sprite = 1,
 		spritelist = {6,7,8,9,10,11},
 		spritecounter = 1,
-		h = 4,
+		h = 5,
 		p = 0,
 		x = 60,
 		y = 60,
@@ -37,8 +40,6 @@ function _init()
 			s = rnd(2)+1
 		})
 	end
-
-	
 	start()
 end
 
@@ -48,8 +49,13 @@ function start()
 end
 
 function game_over()
+	if ship.p > highscore then
+		dset(0, ship.p)
+	end
+	highscore = dget(0)
 	_update = update_game_over
 	_draw = draw_game_over
+	cls()
 end
 
 function animate_ship()
@@ -232,6 +238,7 @@ end
 function hit_ship()
 	sfx(34)
 	shaketimer = 30
+	redstar = true
 	ship.h -=1
 	ship.imm = true
 	if ship.h < 1 then
@@ -270,7 +277,7 @@ function coll(a,b)
 end
 
 function respawn_enemies()
-	local n = flr(rnd(5))+2
+	local n = flr(rnd(2+flr(ship.p/1000))+2)
 		for i=n, 1, -1 do
 		add(enemies,{
 			sprite = 4,
@@ -278,8 +285,8 @@ function respawn_enemies()
 			shoots = false,
 			hit = false,
 			life = 2,
-			m_x = i*16,
-			m_y = -20 - (16 * (i%2)),
+			m_x = i*16 + 8*(6-n),
+			m_y = -20 - (16 * (i%2)) + rnd(8),
 			r = rnd(3)+2,
 			x = -32,
 			y = -32,
@@ -301,13 +308,7 @@ end
 
 function update_start_screen()
 	t += 1
-	if t < 210 then
-		move_stars(.5)
-	else
-		if t < 300 then
-			move_stars(.2)
-		end
-	end
+	move_stars(.5)
 	if btn(5) then
 		_update = update_game
 		_draw = draw_game
@@ -315,16 +316,14 @@ function update_start_screen()
 end
 
 function draw_start_screen()
-	if t < 210 then
-		cls()
-	end
+	cls()
 	foreach(stars,function(s)
 		pset(s.x + m_x ,s.y + m_y ,1)
 	end)
 	spr(72,42,30,8,8)
 	if t > 210 then
 		if t%24 < 12 then
-			print("press x to start", 34, 100, 5)
+			print_outline("press x to start", 34, 100, 1,0)
 		end
 	end
 end
@@ -357,9 +356,14 @@ end
 
 function draw_game()
 	cls()	
+	local starcolor = 1
+	if redstar then
+		starcolor = 8
+	end
 	foreach(stars,function(s)
-		pset(s.x + m_x ,s.y + m_y ,1)
+		pset(s.x + m_x ,s.y + m_y , starcolor)
 	end)
+	redstar = false
 	foreach(bullets,function(b)
 		spr(b.sprite, b.x + m_x, b.y + m_y)
 	end)
@@ -400,13 +404,25 @@ function draw_game()
 	end
 end
 
+function print_outline(string, x, y, color1, color2)
+  print(string, x-1, y+1, color1)
+  print(string, x-1, y, color1)
+  print(string, x-1, y-1, color1)
+  print(string, x, y-1, color1)
+  print(string, x, y+1, color1)
+  print(string, x+1, y+1, color1)
+  print(string, x+1, y-1, color1)
+  print(string, x+1, y, color1)
+  print(string, x, y, color2)
+end
+
 function draw_game_over()
- cls()
  	foreach(stars,function(s)
-		pset(s.x + m_x ,s.y + m_y ,1)
+		pset(s.x + m_x ,s.y + m_y ,8)
 	end)
- print('gameover', 64+m_x,64+m_y,7)
- print('score='..ship.p, 64+m_x, 72+m_y,7)
+	print_outline('game over', 4+m_x,80+m_y,0,7)
+	print_outline('score='..ship.p, 4+m_x, 88+m_y,0,7)
+	print_outline('high score='..highscore, 4+m_x, 96+m_y,0,7)
 end
 
 function update_game_over()
