@@ -318,7 +318,7 @@ function coll(a,b)
 end
 
 function respawn_enemies()
-	local n = flr(rnd(2+flr(ship.p/1500))+2)
+	local n = flr(rnd(2+flr(ship.p/700))+2)
 	for i=n, 1, -1 do
 		add(enemies,{
 			size = 1,
